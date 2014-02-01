@@ -20,6 +20,10 @@ class RubotoSurfaceHolderCallback
   def surfaceCreated(holder)
     android.util.Log.v 'Punch', "open camera"
     @camera = Camera.open # Add (1) for front camera
+    parameters = @camera.parameters
+    parameters.rotation = 90 #(360 + (90 - @rotation)) % 360
+    #parameters.set_picture_size(640, 480)
+    @camera.parameters = parameters
     @camera.preview_display = holder
     @camera.start_preview
     android.util.Log.v 'Punch', "preview done"
