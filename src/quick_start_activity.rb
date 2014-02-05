@@ -85,34 +85,53 @@ class QuickStartActivity
     @sender = nil
     @started = nil
     begin
-			android.util.Log.v 'Punch', "trying to make view #{@@index}"
-			@surface_view = android.view.SurfaceView.new self #(@ruboto_java_instance)
-			android.util.Log.v 'Punch', "got view"
-			@surface_view.set_on_click_listener{|v| take_picture}
-			@holder_callback = RubotoSurfaceHolderCallback.new
-			@surface_view.holder.add_callback @holder_callback
+			#@surface_view = android.view.SurfaceView.new self #(@ruboto_java_instance)
+			#@surface_view.set_on_click_listener{|v| take_picture}
+			#@holder_callback = RubotoSurfaceHolderCallback.new
+			#@surface_view.holder.add_callback @holder_callback
 			# Deprecated, but still required for older API version
-			@surface_view.holder.set_type android.view.SurfaceHolder::SURFACE_TYPE_PUSH_BUFFERS
+			#@surface_view.holder.set_type android.view.SurfaceHolder::SURFACE_TYPE_PUSH_BUFFERS
 			#am = self.getSystemService(android.content.Context::AUDIO_SERVICE)
 			#am.set_stream_volume(android.media.AudioManager::STREAM_SYSTEM, 0, 0)
 			#android.util.Log.v 'Punch', "volume off"
-			self.content_view = @surface_view
-			android.util.Log.v 'Punch', Dir.entries('/storage/sdcard0/DCIM/100MEDIA').join(',')
+			#self.content_view = @surface_view
+			#android.util.Log.v 'Punch', Dir.entries('/storage/sdcard0/DCIM/100MEDIA').join(',')
 			@db = DBM.open("#{Dir.pwd}/pictures", 0666, DBM::WRCREAT)
-
 		rescue Exception => e
 			@db.close
 			android.util.Log.v 'Punch', "ERROR #{e.inspect} #{e.backtrace}"
 		end
-    #self.content_view =
-    #    linear_layout :orientation => :vertical do
-    #      @text_view = text_view :text => 'What hath Matz wrought?', :id => 42, 
-    #                             :layout => {:width => :match_parent},
-    #                             :gravity => :center, :text_size => 48.0
-    #      button :text => 'M-x butterfly', 
-    #             :layout => {:width => :match_parent},
-    #             :id => 43, :on_click_listener => proc { butterfly }
-    #    end
+		Thread.new do
+			return if @thread
+			android.util.Log.v 'Punch', "starting thread"
+			@thread = self
+			loop do
+				android.util.Log.v 'Punch', "start loop"
+				begin
+					sender = Sender.new
+					path = '/storage/sdcard0/DCIM/100MEDIA'
+					picture = Dir.entries(path).last
+					sender.camera_data = "#{path}/#{picture}"
+					puts "#{path}/#{picture}"
+					android.util.Log.v 'Punch', "start loop"
+					sender.run
+				rescue Exception => e
+					android.util.Log.v 'Punch', "ERROR #{e.inspect} #{e.backtrace}"
+				end
+				sleep 15
+				android.util.Log.v 'Punch', "done sending"
+			end
+			android.util.Log.v 'Punch', "thread done"
+		end
+    self.content_view =
+        linear_layout :orientation => :vertical do
+          @text_view = text_view :text => 'What hath Matz wrought?', :id => 42, 
+                                 :layout => {:width => :match_parent},
+                                 :gravity => :center, :text_size => 48.0
+          button :text => 'M-x butterfly', 
+                 :layout => {:width => :match_parent},
+                 :id => 43, :on_click_listener => proc { butterfly }
+        end
   rescue Exception
     puts "Exception creating activity: #{$!}"
     puts $!.backtrace.join("\n")
@@ -124,35 +143,6 @@ class QuickStartActivity
 	end
 
   private
-
-  def do_nothing
-  end
-
-  def butterfly
-    @text_view.text = 'What hath Matz wrought!'
-    begin
-    rescue => e
-      android.util.Log.v 'Punch', "create camera failed #{e.backtrace}"
-    end
-    toast "stuffing"
-    if false #@started.nil?
-      begin
-        @started = Thread.new do 
-          s = Sender.new
-          android.util.Log.v 'Punch', "take picture"
-          #CameraHelper.take_picture(s, @camera)
-          #s = Receiver.new
-          android.util.Log.v 'Punch', "running sender"
-          #s.run
-        end
-      rescue Exception => e
-        android.util.Log.v 'Punch', "onPause got called! #{e.inspect}"
-      end
-    else
-      @started.kill
-      @started = nil
-    end
-  end
 
   def take_picture
     if @clicked.nil?
@@ -170,9 +160,6 @@ class QuickStartActivity
         fos.write(data)
         fos.close
         #begin
-        @sender = Sender.new
-        @sender.camera_data = picture_file
-        android.util.Log.v 'Punch', "what now"
         if @thread.nil?
           @thread = Thread.new do
             @sender.run

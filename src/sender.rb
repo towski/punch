@@ -1,4 +1,5 @@
 require 'socket'
+require 'timeout'
 
 CRLF = "\r\n"
 
@@ -10,10 +11,24 @@ class Sender
   end
 
   def run
+		android.util.Log.v 'Punch', "starting sleep on port"
     begin
-      sock = TCPSocket.new 'towski.us', 4444
-      sock.write("hey")
-      remote_host, remote_port = sock.read.split(":")
+			domain = "ec2-54-196-239-114.compute-1.amazonaws.com"
+      sock = TCPSocket.new domain, 4444
+      sock.write("phone")
+			if IO.select([sock], nil, nil, 30)
+				android.util.Log.v 'Punch', "got something?"
+				remote_host, remote_port = sock.read.split(":")
+			else
+				android.util.Log.v 'Punch', "timed out, returning"
+				sock.close
+				return
+			end
+			if remote_host == "166.137.184.78"
+				puts "talking to ourself"
+				sock.close
+				return
+			end
       puts "readed #{remote_host}"
       sock.close
     rescue => e
@@ -32,9 +47,11 @@ class Sender
     udp_in.bind('0.0.0.0', 6311)
     puts "Binding to local port 6311"
     @start = false
+		@timeouts = 0
 
     loop do
       # Receive data or time out after 5 seconds
+			puts "start udp loop"
       if IO.select([udp_in], nil, nil, rand(4))
         data = udp_in.recvfrom(1024)
         remote_port = data[1][1]
@@ -53,8 +70,13 @@ class Sender
         end
       else
         #if we time out, we know the other guy has started
-        puts "actually timed out"
         i = 0
+				@timeouts += 1
+				if @timeouts > 10
+					puts "actually timed out"
+					udp_in.close
+					return
+				end
         if @start
           puts "going to send #{camera_data}"
           file = File.open(camera_data)
