@@ -14,9 +14,9 @@ require 'sender'
 android.util.Log.v 'Punch', "trying to do something"
 
 begin
-java_import 'org.hello.HelloActivity'
-java_import 'org.jruby.ext.dbm.RubyDBM'
-org.jruby.ext.dbm.RubyDBM.initDBM(JRuby.runtime)
+#java_import 'org.jruby.ext.dbm.DBMLibrary'
+	library = org.jruby.ext.dbm.DBMLibrary.new
+	library.load(JRuby.runtime, false)
 	android.util.Log.v 'Punch', "Got RubyDBM!"
 	#java_import 'com.example.android.tictactoe.library.GameView'
 		rescue Exception => e
@@ -138,8 +138,8 @@ class QuickStartActivity
   end
 
 	def onUserLeaveHint
-		android.util.Log.v 'Punch', "On User leave hint"
-		finish
+		#android.util.Log.v 'Punch', "On User leave hint"
+		#finish
 	end
 
   private
