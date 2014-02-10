@@ -3,6 +3,11 @@ package org.ruboto;
 import org.ruboto.Script;
 import org.ruboto.ScriptLoader;
 import java.io.IOException;
+import android.content.Intent;
+import android.app.Notification;
+import android.app.PendingIntent;
+import android.R;
+import org.ruboto.example.quick_start.QuickStartActivity;
 
 public class RubotoService extends android.app.Service implements org.ruboto.RubotoComponent {
     /**
@@ -71,24 +76,31 @@ public class RubotoService extends android.app.Service implements org.ruboto.Rub
   }
 
   public void onCreate() {
+        System.out.println("Punch On what");
     if (ScriptLoader.isCalledFromJRuby()) {super.onCreate(); return;}
-    preOnCreate();if (JRubyAdapter.isInitialized() && scriptInfo.isReadyToLoad()) {
+    preOnCreate();
+    if (JRubyAdapter.isInitialized() && scriptInfo.isReadyToLoad()) {
         ScriptLoader.loadScript(this);
     } else {
         {super.onCreate(); return;}
     }
 
     String rubyClassName = scriptInfo.getRubyClassName();
+        System.out.println("Punch Ruby classname: " + rubyClassName);
     if (rubyClassName == null) {super.onCreate(); return;}
     if ((Boolean)JRubyAdapter.runScriptlet(rubyClassName + ".instance_methods(false).any?{|m| m.to_sym == :onCreate}")) {
+        System.out.println("found onCreate");
       JRubyAdapter.runRubyMethod(scriptInfo.getRubyInstance(), "onCreate");
     } else {
       if ((Boolean)JRubyAdapter.runScriptlet(rubyClassName + ".instance_methods(false).any?{|m| m.to_sym == :on_create}")) {
+        System.out.println("found on_create");
         JRubyAdapter.runRubyMethod(scriptInfo.getRubyInstance(), "on_create");
       } else {
         if ((Boolean)JRubyAdapter.runScriptlet(rubyClassName + ".instance_methods(true).any?{|m| m.to_sym == :on_create}")) {
+        System.out.println("found on_create true");
           JRubyAdapter.runRubyMethod(scriptInfo.getRubyInstance(), "on_create");
         } else {
+        System.out.println("running onCreate");
           JRubyAdapter.runRubyMethod(scriptInfo.getRubyInstance(), "onCreate");
         }
       }
@@ -189,12 +201,28 @@ public class RubotoService extends android.app.Service implements org.ruboto.Rub
   }
 
   public int onStartCommand(android.content.Intent intent, int flags, int startId) {
+        System.out.println("Punch onStartCommand");
     if (ScriptLoader.isCalledFromJRuby()) return super.onStartCommand(intent, flags, startId);
     if (JRubyAdapter.isInitialized() && scriptInfo.isReadyToLoad()) {
         ScriptLoader.loadScript(this);
     } else {
         return super.onStartCommand(intent, flags, startId);
     }
+      Notification note=new Notification(R.drawable.stat_notify_chat,
+                                          "Can you hear the music?",
+                                          System.currentTimeMillis());
+      Intent i=new Intent(this, QuickStartActivity.class);
+    
+      i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+    
+      PendingIntent pi=PendingIntent.getActivity(this, 0, i, 0);
+      
+      note.setLatestEventInfo(this, "Fake Player",
+                              "Now Playing: \"Ummmm, Nothing\"",
+                              pi);
+      note.flags|=Notification.FLAG_NO_CLEAR;
+
+      startForeground(1337, note);
 
     String rubyClassName = scriptInfo.getRubyClassName();
     if (rubyClassName == null) return super.onStartCommand(intent, flags, startId);

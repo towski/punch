@@ -8,3 +8,4 @@ tmp
 local.properties
 server.pem
 build
+adb_logcat.log

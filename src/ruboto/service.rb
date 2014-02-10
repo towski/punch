@@ -25,17 +25,21 @@ module Ruboto
         end
       end
 
-      class_name = options[:class_name] || "#{klass.name.split('::').last}_#{source_descriptor(block)[0].split('/').last.gsub(/[.-]+/, '_')}_#{source_descriptor(block)[1]}"
+      string = "#{klass.name.split('::').last}_#{source_descriptor(block)[0].split('/').last.gsub(/[.-]+/, '_')}_#{source_descriptor(block)[1]}"
+      class_name = options[:class_name] || string
       if Object.const_defined?(class_name)
         Object.const_get(class_name).class_eval(&block) if block_given?
       else
+      android.util.Log.v "Punch", "here eval block"
         Object.const_set(class_name, Class.new(&block))
       end
       i = android.content.Intent.new
+      android.util.Log.v "Punch", klass.java_class.to_s
+      android.util.Log.v "Punch", class_name
       i.setClass self, klass.java_class
       i.putExtra(Ruboto::CLASS_NAME_KEY, class_name)
       i.putExtra(Ruboto::SCRIPT_NAME_KEY, options[:script]) if options[:script]
-      self.startService i
+      $background_service = self.startService i
       self
     end
   end

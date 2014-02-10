@@ -66,6 +66,7 @@ public class Script {
             String path = dir + "/" + name;
             Log.d("Checking path: " + path);
             if (new File(path).exists()) {
+            Log.d("FOUND A MOTHER");
                 return "file:" + path;
             }
         }

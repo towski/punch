@@ -16,6 +16,7 @@ public class RubotoActivity extends android.app.Activity implements org.ruboto.R
      */
     private boolean preOnCreate(Bundle bundle) {
         System.out.println("RubotoActivity onCreate(): " + getClass().getName() + ", finishing: " + isFinishing());
+        System.out.println("booger onCreate(): " + getClass().getName() + ", finishing: " + isFinishing());
 
         if (isFinishing()) return true;
 

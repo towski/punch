@@ -1,0 +1,2 @@
+class Request < Model
+end

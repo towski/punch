@@ -99,6 +99,7 @@ public class ScriptLoader {
                     Log.d("Create separate Ruby instance for class: " + rubyClass);
                     rubyInstance = JRubyAdapter.runRubyMethod(rubyClass, "new");
                     JRubyAdapter.runRubyMethod(rubyInstance, "instance_variable_set", "@ruboto_java_instance", component);
+                    Log.d("called instance_variable_set on " + rubyClass);
                 } else {
                     // Neither script file nor predefined class
                     Log.e("Missing script and class.  Either script or predefined class must be present.");
